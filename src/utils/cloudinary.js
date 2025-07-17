@@ -1,5 +1,9 @@
+import { rejects } from "assert";
 import {v2 as cloudinary} from "cloudinary"
+import { error } from "console";
 import fs from "fs"
+import { resolve } from "path";
+import { Readable } from "stream";
 
  cloudinary.config({ 
         cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -8,19 +12,33 @@ import fs from "fs"
     });
 
 
-const uploadCloudinary = async (localFilePath) =>{
-    try {
-        const response = await cloudinary.uploader.upload(localFilePath,{
+const uploadCloudinary = async (buffer) =>{
+   
+    return new Promise ((resolve,rejects)=>{
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
             resource_type: "auto"
-        })
-        fs.unlinkSync(localFilePath)
-        console.log("file is upoladed ",response.url)
-        return response
-    } catch (error) {
-        fs.unlinkSync(localFilePath)
+            },
 
-        
+            (error,result)=>{
+                if(error){
+                    return rejects(error);
+                }
+                resolve(result)
+            }
+    );
+
+
+    console.log("file is upoladed ",uploadStream.url)
+    
+    const readableStream = new Readable();
+    readableStream.push(buffer)
+    readableStream.push(null)
+    readableStream.pipe(uploadStream)
+
     }
+)
+    
 }
 
 

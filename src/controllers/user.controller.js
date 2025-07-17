@@ -41,7 +41,11 @@ const registerUser = asyncHandler(async (req, res) => {
     // check for user creation 
     // return response 
 
+    console.log("The data is ",req.body);
+    
     const { username, fullName, email, password } = req.body
+
+    
 
 
     //     if([fullName,email,password,username].some((field)=> !field || field?.trim() === "" )  )
@@ -73,7 +77,18 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User with username and email already exist")
     }
 
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    if(!req.files || !req.files.avatar || req.files.avatar.length === 0){
+        throw new ApiError(400,"Avatar file is required");
+    }
+
+    const avatarBuffer = req.files.avatar[0].buffer
+    
+    console.log("This is avatarbuffer",avatarBuffer)
+    
+    const avatar = await uploadCloudinary(avatarBuffer)
+    console.log("This is avatar",avatar)
+    
+    // const avatarLocalPath = req.files?.avatar[0]?.path;
     // what is the path here ? is it from where it send 
 
 
@@ -87,12 +102,12 @@ const registerUser = asyncHandler(async (req, res) => {
     //why the previous checker not work ?
 
 
-    if (!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file is required")
+    // if (!avatarLocalPath) {
+    //     throw new ApiError(400, "Avatar file is required")
 
-    }
+    // }
 
-    const avatar = await uploadCloudinary(avatarLocalPath)
+    // const avatar = await uploadCloudinary(req.files.buffer)
 
     let coverImage = ""
 
@@ -106,6 +121,8 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required")
 
     }
+
+    
 
     const user = await User.create({
         fullName,
